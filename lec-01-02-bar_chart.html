@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>01.02 Bar Chart </title>
+</head>
+<body>
+<style type="text/css">
+	#renderer {
+		width: 550px;
+		height: 450px;
+		background: #FFF
+	}
+</style>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.13.0/d3.min.js"></script>
+<svg id='renderer'></svg>
+
+<script type="text/javascript">
+	var total_width = 550;
+	var total_height = 450;
+
+	var root = d3.select('#renderer');
+
+	// data
+	var data = [10, 12, 15, 13, 11, 9, 12]
+
+	// draw axis 
+	root.append('line')
+		.attr('x1', 0)
+		.attr('y1', total_height)
+		.attr('x2', total_width)
+		.attr('y2', total_height)
+		.attr('stroke', '#555')
+
+
+	root.append('line')
+		.attr('x1', 0)
+		.attr('y1', 0)
+		.attr('x2', 0)
+		.attr('y2', total_height)
+		.attr('stroke', '#555')
+
+	var interval = total_width / data.length;
+	for(var i = 0; i < data.length; i++){
+		console.log(data[i]);
+		var rect_height = data[i] * 20;
+		root.append('rect')
+			.attr('x', interval*i + 20)
+			.attr('y', total_height - rect_height)
+			.attr('width', 50)
+			.attr('height', rect_height)
+			.attr('fill', '#73a')
+}
+
+</script>
+</body>
+</html>
