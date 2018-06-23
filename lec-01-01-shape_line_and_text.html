@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>01.01 Shape, Line, and Text </title>
+</head>
+<body>
+<style type="text/css">
+	body {
+		background: #eee
+	}
+	#renderer {
+		width: 550px;
+		height: 450px;
+		background: #FFF
+	}
+</style>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.13.0/d3.min.js"></script>
+<svg id='renderer'></svg>
+
+<script type="text/javascript">
+	var root = d3.select('#renderer');
+
+	// draw rect
+	root.append('rect')
+		.attr('x', 10)		// start x
+		.attr('y', 10)		// start y 
+		.attr('width', 100)
+		.attr('height', 200)
+		.attr('fill','#E8F') // HEX RGB COLOR
+
+	// draw circle
+	root.append('circle')
+		.attr('cx', 200) // center x
+		.attr('cy', 60)  // center y
+		.attr('r', 50)	 // radius
+		.attr('fill','#2a4')
+		.attr('stroke', '#333')
+		.attr('stroke-width', 3)
+
+	// draw line
+	root.append('line')
+		.attr('x1', 300)
+		.attr('y1', 10)
+		.attr('x2', 300)
+		.attr('y2', 300)
+		.attr('stroke', '#57a')
+		.attr('stroke-width', 3)
+
+
+	// draw Text
+	root.append('text')
+		.text('hello')
+		.attr('x', 350)
+		.attr('y', 20)
+		.attr('text-anchor', 'start')	 
+		.attr('alignment-baseline', 'hanging')
+		.attr('font-size', 40)
+		.attr('fill', '#C00')
+		.attr('stroke', '#000')
+		// d3 svg text alignment 
+		//  : https://bl.ocks.org/emmasaunders/0016ee0a2cab25a643ee9bd4855d3464
+
+
+</script>
+</body>
+</html>
