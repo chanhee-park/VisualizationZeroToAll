@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>02.02.02 Scale Dynamic</title>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.13.0/d3.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <style type="text/css">
+        #renderer {
+            width: 550px;
+            height: 450px;
+            background: #FFF
+        }
+    </style>
+</head>
+<body>
+<svg id='renderer'></svg>
+<button id="remove">Remove</button>
+<button id="append">Append</button>
+</body>
+<script type="text/javascript">
+    // Draws a graph that changes dynamically depending on the data.
+    // Notice how the x and y axes change depending on the number of data or the range of values.
+
+    var TOTAL_WIDTH = 550;
+    var TOTAL_HEIGHT = 450;
+    var root = d3.select('#renderer');
+
+
+    // data
+    var data = [10, 12, 15, 13, 11];
+
+
+    // draw axis
+    root.append('line')
+        .attr('x1', 0)
+        .attr('y1', TOTAL_HEIGHT)
+        .attr('x2', TOTAL_WIDTH)
+        .attr('y2', TOTAL_HEIGHT)
+        .attr('stroke', '#555');
+
+    root.append('line')
+        .attr('x1', 0)
+        .attr('y1', 0)
+        .attr('x2', 0)
+        .attr('y2', TOTAL_HEIGHT)
+        .attr('stroke', '#555');
+
+
+    var drawBarChart = function (data) {
+        // remove the Chart.
+        d3.selectAll("#renderer > *").remove();
+
+        // !IMPORTANT :
+        // The length and width of the bars are determined by the length of the data.
+        var interval = TOTAL_WIDTH / data.length;
+        var barWidth = (TOTAL_WIDTH / data.length) * (2 / 3);
+
+        // !IMPORTANT :
+        // The length and width of the bars are determined by the length of the data.
+        var maximumDataValue = 0;
+        for (var i = 0; i < data.length; i++) {
+            if (data[i] > maximumDataValue) {
+                maximumDataValue = data[i];
+            }
+        }
+        // maxRectHeight(== TOTAL_HEIGHT) = rectRatio * maximumDataValue
+        var rectRatio = TOTAL_HEIGHT / maximumDataValue;
+        for (var i = 0; i < data.length; i++) {
+            var rectHeight = data[i] * rectRatio;
+            root.append('rect')
+                .attr('x', interval * i)
+                .attr('y', TOTAL_HEIGHT - rectHeight)
+                .attr('width', barWidth)
+                .attr('height', rectHeight)
+                .attr('fill', '#73a');
+        }
+    };
+
+    drawBarChart(data);
+
+    $('#append').click(function () {
+        data.push(Math.floor(Math.random() * 8 + 8)); // append a item to last of array.
+        console.log(data);
+        drawBarChart(data);
+    });
+
+    $('#remove').click(function () {
+        data.pop(); // remove the last item.
+        console.log(data);
+        drawBarChart(data);
+    });
+
+
+</script>
+</html>
