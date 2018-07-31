@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>01.02 Bar Chart </title>
+    <title>03.01.01 Bar Chart </title>
 </head>
 <body>
 <style type="text/css">
     body {
-        background: #fafafa;
+        background: #fefefe;
     }
 
     #renderer {
         width: 550px;
-        height: 450px;
+        height: 550px;
         background: #FFF
     }
 </style>
@@ -29,17 +29,27 @@
     var root = d3.select('#renderer');
 
     var totalWidth = 550;
-    var totalHeight = 450;
+    var totalHeight = 550;
 
     // 인덱스를 써주기 위한 여백도 지정해줍니다.
-    var paddingLeft = 30;
-    var paddingBottom = 15;
-    var paddingTop = 30;
+    var paddingLeft = 40;
+    var paddingBottom = 30;
+    var paddingTop = 80;
 
 
     // 그릴 곳의 넓이와 여백을 통해 그래프의 크기를 계산합니다.
     var graphWidth = totalWidth - paddingLeft;
     var graphHeight = totalHeight - paddingBottom - paddingTop;
+
+
+    // 차트의 제목을 적어줍니다.
+    root.append('text')
+        .text('영업 사원 연 평균 실적 2015 - 2018 (단위 : 건)')
+        .attr('x', totalWidth / 2)
+        .attr('y', paddingTop / 2)
+        .attr('font-size', 21)
+        .attr('text-anchor', 'middle')
+        .attr('alignment-baseline', 'middle');
 
 
     // 가로축과 세로축을 그려줍니다.
@@ -70,7 +80,7 @@
         drawHorizontalGrid(0, maximumPerformance, graphHeight + paddingTop, paddingTop, 5);
 
         // 바차트를 그립니다.
-        drawBarChart(data, 0, maximumPerformance, '평균');
+        drawBarChart(data, 0, maximumPerformance, '평균', '이름');
 
     });
 
@@ -94,7 +104,7 @@
             var valueOfGridLine = Math.floor(((endValue * i) / numOfLine) + startValue);
             root.append('text')
                 .text(valueOfGridLine)
-                .attr('x', paddingLeft)
+                .attr('x', paddingLeft - 10)
                 .attr('y', gridLineY)
                 .attr('text-anchor', 'end')
                 .attr('alignment-baseline', 'central');
@@ -111,12 +121,13 @@
         }
     }
 
-    function drawBarChart(data, min, max, feature) {
+    function drawBarChart(data, min, max, feature, indexFeature) {
         var interval = totalWidth / data.length;
         var barWidth = (totalWidth / data.length) / 2;
         var rectRatio = graphHeight / (max - min);
         for (var i = 0; i < data.length; i++) {
             var valueOfBar = data[i][feature];
+            var indexOfBar = data[i][indexFeature];
             var rectHeight = valueOfBar * rectRatio;
 
             // draw Bar
@@ -134,12 +145,16 @@
                 .attr('y', graphHeight - rectHeight + paddingTop)
                 .attr('text-anchor', 'middle')
                 .attr('alignment-baseline', 'ideographic');
+
+            console.log(indexOfBar);
+            root.append('text')
+                .text(indexOfBar)
+                .attr('x', interval * i + paddingLeft + 15 + barWidth / 2)
+                .attr('y', graphHeight + paddingTop + 5)
+                .attr('text-anchor', 'middle')
+                .attr('alignment-baseline', 'hanging');
         }
     }
-
-    // data
-    var data = [10, 12, 15, 13, 11, 9, 12];
-
 
 </script>
 </body>
