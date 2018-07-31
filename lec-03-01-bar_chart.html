@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>01.02 Bar Chart </title>
+</head>
+<body>
+<style type="text/css">
+    body {
+        background: #fafafa;
+    }
+
+    #renderer {
+        width: 550px;
+        height: 450px;
+        background: #FFF
+    }
+</style>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.13.0/d3.min.js"></script>
+<svg id='renderer'></svg>
+
+<script type="text/javascript">
+    // 바차트는 이산적인 수치형 데이터에 적합합니다.
+    // 여러 기업의 매출, 개인의 성적 등 서로 분리된 값들을 비교하는데 효과적입니다.
+    // 간단한 실적 데이터를 통해 바차트를 그려봅시다.
+    // 각 영업사원의 평균 매출을 비교하는 바차트를 만들 것 입니다.
+
+
+    // 가장 먼저 할 일은 차트를 그릴 부분을 정의해주는 것 입니다.
+    var root = d3.select('#renderer');
+
+    var totalWidth = 550;
+    var totalHeight = 450;
+
+    // 인덱스를 써주기 위한 여백도 지정해줍니다.
+    var paddingLeft = 30;
+    var paddingBottom = 15;
+    var paddingTop = 30;
+
+
+    // 그릴 곳의 넓이와 여백을 통해 그래프의 크기를 계산합니다.
+    var graphWidth = totalWidth - paddingLeft;
+    var graphHeight = totalHeight - paddingBottom - paddingTop;
+
+
+    // 가로축과 세로축을 그려줍니다.
+    root.append('line')
+        .attr('x1', paddingLeft)
+        .attr('y1', graphHeight + paddingTop)
+        .attr('x2', totalWidth)
+        .attr('y2', graphHeight + paddingTop)
+        .attr('stroke', '#555');
+
+    root.append('line')
+        .attr('x1', paddingLeft)
+        .attr('y1', paddingTop)
+        .attr('x2', paddingLeft)
+        .attr('y2', graphHeight + paddingTop)
+        .attr('stroke', '#555');
+
+
+    // 차트를 그리기 위해서 우선 데이터를 받아와야 겠죠 ?!
+    d3.csv("./data/salesPerformance.csv", function (data) {
+        // 데이터가 잘 들어왔는지 콘솔창을 통해 확인합니다.
+        console.log(data);
+
+        // 최고 매출을 구합니다.
+        var maximumPerformance = maximumDataValue(data, '평균');
+
+        // 최고 매출 정보를 통해 그리드를 그립시다. 비교를 위해 그리드는 필수적입니다.
+        drawHorizontalGrid(0, maximumPerformance, graphHeight + paddingTop, paddingTop, 5);
+
+        // 바차트를 그립니다.
+        drawBarChart(data, 0, maximumPerformance, '평균');
+
+    });
+
+
+    // 위에서 사용한 함수들에 대한 정의입니다. 함수로 뽑아두면 나중에 사용하기도 편하고, 코드의 가독성도 올라갑니다.
+    function maximumDataValue(data, featureName) {
+        var max = 0;
+        for (var i = 0; i < data.length; i++) {
+            var value = data[i][featureName];
+            max = value > max ? value : max;
+        }
+        return max;
+    }
+
+    function drawHorizontalGrid(startValue, endValue, startY, endY, numOfLine) {
+        var rangeY = startY - endY;
+        for (var i = 0; i < numOfLine; i++) {
+            var gridLineY = startY - (rangeY * i / numOfLine);
+
+            // 그리드 라인에 대한 수치를 그래프 왼쪽 여백에 적어줍니다.
+            var valueOfGridLine = Math.floor(((endValue * i) / numOfLine) + startValue);
+            root.append('text')
+                .text(valueOfGridLine)
+                .attr('x', paddingLeft)
+                .attr('y', gridLineY)
+                .attr('text-anchor', 'end')
+                .attr('alignment-baseline', 'central');
+            // 텍스트 정렬은 이 페이지에서 그림을 참고하세요.
+            // https://bl.ocks.org/emmasaunders/0016ee0a2cab25a643ee9bd4855d3464
+
+            // 그리드 라인을 그려줍니다.
+            root.append('line')
+                .attr('x1', paddingLeft)
+                .attr('x2', totalWidth)
+                .attr('y1', gridLineY)
+                .attr('y2', gridLineY)
+                .attr('stroke', '#ccc')
+        }
+    }
+
+    function drawBarChart(data, min, max, feature) {
+        var interval = totalWidth / data.length;
+        var barWidth = (totalWidth / data.length) / 2;
+        var rectRatio = graphHeight / (max - min);
+        for (var i = 0; i < data.length; i++) {
+            var valueOfBar = data[i][feature];
+            var rectHeight = valueOfBar * rectRatio;
+
+            // draw Bar
+            root.append('rect')
+                .attr('x', interval * i + paddingLeft + 15)
+                .attr('y', graphHeight - rectHeight + paddingTop)
+                .attr('width', barWidth)
+                .attr('height', rectHeight)
+                .attr('fill', '#AC5');
+
+            // write value of bar
+            root.append('text')
+                .text(valueOfBar)
+                .attr('x', interval * i + paddingLeft + 15 + barWidth / 2)
+                .attr('y', graphHeight - rectHeight + paddingTop)
+                .attr('text-anchor', 'middle')
+                .attr('alignment-baseline', 'ideographic');
+        }
+    }
+
+    // data
+    var data = [10, 12, 15, 13, 11, 9, 12];
+
+
+</script>
+</body>
+</html>
