@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>03.01 Bar Chart </title>
+</head>
+<body>
+<style type="text/css">
+    body {
+        background: #fefefe;
+    }
+
+    #renderer {
+        width: 550px;
+        height: 550px;
+        background: #FFF
+    }
+</style>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.13.0/d3.min.js"></script>
+<svg id='renderer'></svg>
+
+<script type="text/javascript">
+    // 라인차트는 연속적인 수치형 데이터에 적합합니다.
+    // 한 기업의 매출, 개인의 성적 등 연속 적인 값의 변화를 보는 것에 효과적입니다.
+    // 간단한 실적 데이터를 통해 라인차트를 그려봅시다.
+    // 각 영업사원의 연 매출 변화를 보여주는 바차트를 만들 것 입니다.
+
+
+    // 가장 먼저 할 일은 차트를 그릴 부분을 정의해주는 것 입니다.
+    var root = d3.select('#renderer');
+
+    var totalWidth = 550;
+    var totalHeight = 550;
+
+    // 인덱스를 써주기 위한 여백도 지정해줍니다.
+    var paddingLeft = 40;
+    var paddingBottom = 30;
+    var paddingTop = 80;
+
+
+    // 그릴 곳의 넓이와 여백을 통해 그래프의 크기를 계산합니다.
+    var graphWidth = totalWidth - paddingLeft;
+    var graphHeight = totalHeight - paddingBottom - paddingTop;
+
+
+    // 각 사원의 라인 색을 달리 해주기 위해 변수를 만들어 줍니다.
+    var colorOfSalesman = {
+        '짱구': '#e36',
+        '아구몬': '#ea0',
+        '노진구': '#0ea',
+        '코난': '#24e'
+    };
+
+    // 차트의 제목을 적어줍니다.
+    root.append('text')
+        .text('영업 사원 연도별 실적 2015 - 2018 (단위 : 건)')
+        .attr('x', totalWidth / 2)
+        .attr('y', paddingTop / 2)
+        .attr('font-size', 21)
+        .attr('text-anchor', 'middle')
+        .attr('alignment-baseline', 'middle');
+
+
+    // 가로축과 세로축을 그려줍니다.
+    root.append('line')
+        .attr('x1', paddingLeft)
+        .attr('y1', graphHeight + paddingTop)
+        .attr('x2', totalWidth)
+        .attr('y2', graphHeight + paddingTop)
+        .attr('stroke', '#555');
+
+    root.append('line')
+        .attr('x1', paddingLeft)
+        .attr('y1', paddingTop)
+        .attr('x2', paddingLeft)
+        .attr('y2', graphHeight + paddingTop)
+        .attr('stroke', '#555');
+
+
+    // 차트를 그리기 위해서 우선 데이터를 받아와야 겠죠 ?!
+    d3.csv("./data/salesPerformance.csv", function (data) {
+        // 데이터가 잘 들어왔는지 콘솔창을 통해 확인합니다.
+        console.log(data);
+
+        // 그릴 피쳐 정보를 배열로 저장해둡시다.
+        var linePointFeatures = ['2015년', '2016년', '2017년', '2018년'];
+
+        // 최고 / 최저 매출을 구합니다.
+        var maximumPerformance = maximumDataValue(data, linePointFeatures);
+        var minimumPerformance = minimumDataValue(data, linePointFeatures);
+
+        var graphMaxVal = maximumPerformance * 1.2;
+        var graphMinVal = minimumPerformance * 0.8;
+
+        // 최고 매출 정보를 통해 그리드를 그립시다. 변화를 확인하고 비교하기 위해 그리드는 필수적입니다.
+        drawHorizontalGrid(graphMinVal, graphMaxVal, graphHeight + paddingTop, paddingTop, 5);
+
+        // 라인차트를 그립니다. 바차트와는 다르게 한명 한명의 실적 데이터를 통해 그립니다.
+        for (var i = 0; i < data.length; i++) {
+            var salesman = data[i];
+            var salesmanName = salesman['이름'];
+            var lineColor = colorOfSalesman[salesmanName];
+
+            var performancesByYear = [];
+            for (var j = 0; j < linePointFeatures.length; j++) {
+                var feature = linePointFeatures[j];
+                performancesByYear.push(salesman[feature]);
+            }
+            drawEachLine(performancesByYear, graphMinVal, graphMaxVal, lineColor, salesmanName);
+        }
+    });
+
+    // 위에서 사용한 함수들에 대한 정의입니다. 함수로 뽑아두면 나중에 사용하기도 편하고, 코드의 가독성도 올라갑니다.
+    function maximumDataValue(data, featureNames) {
+        var max = 0;
+        for (var i = 0; i < featureNames.length; i++) {
+            var featureName = featureNames[i];
+            for (var j = 0; j < data.length; j++) {
+                var value = data[j][featureName];
+                max = value > max ? value : max;
+            }
+        }
+        return max;
+    }
+
+    function minimumDataValue(data, featureNames) {
+        var min = Math.pow(100, 100);
+        for (var i = 0; i < featureNames.length; i++) {
+            var featureName = featureNames[i];
+            for (var j = 0; j < data.length; j++) {
+                var value = data[j][featureName];
+                min = value < min ? value : min;
+            }
+        }
+        return min;
+    }
+
+    function drawHorizontalGrid(startValue, endValue, lowestYPosition, highestYPosition, numOfLine) {
+        var rangeY = lowestYPosition - highestYPosition;
+        for (var i = 0; i < numOfLine; i++) {
+            var gridLineY = lowestYPosition - (rangeY * i / numOfLine);
+
+            // 그리드 라인에 대한 수치를 그래프 왼쪽 여백에 적어줍니다.
+            var valueOfGridLine = Math.floor((((endValue - startValue) * i) / numOfLine) + startValue);
+            root.append('text')
+                .text(valueOfGridLine)
+                .attr('x', paddingLeft - 10)
+                .attr('y', gridLineY)
+                .attr('text-anchor', 'end')
+                .attr('alignment-baseline', 'central');
+            // 텍스트 정렬은 이 페이지의 그림을 참고하세요.
+            // https://bl.ocks.org/emmasaunders/0016ee0a2cab25a643ee9bd4855d3464
+
+            // 그리드 라인을 그려줍니다.
+            root.append('line')
+                .attr('x1', paddingLeft)
+                .attr('x2', totalWidth)
+                .attr('y1', gridLineY)
+                .attr('y2', gridLineY)
+                .attr('stroke', '#ccc')
+        }
+    }
+
+    function drawEachLine(linePointData, minYPosition, maxYPosition, color, lineName) {
+        var interval = totalWidth / linePointData.length;
+        var horizontalPadding = (totalWidth - (interval * (linePointData.length - 1))) / 4;
+        var heightRatio = graphHeight / (maxYPosition - minYPosition);
+
+        for (var i = 0; i < linePointData.length - 1; i++) {
+            var valueOfPoint = linePointData[i];
+            var valueOfNextPoint = linePointData[i + 1];
+            var pointHeight = valueOfPoint * heightRatio - minYPosition;
+            var nextPointHeight = valueOfNextPoint * heightRatio - minYPosition;
+
+            // draw line (by 2 point)
+            root.append('line')
+                .attr('x1', interval * i + paddingLeft + horizontalPadding)
+                .attr('y1', graphHeight - pointHeight + paddingTop)
+                .attr('x2', interval * (i + 1) + paddingLeft + horizontalPadding)
+                .attr('y2', graphHeight - nextPointHeight + paddingTop)
+                .attr('stroke-width', 2)
+                .attr('stroke', color);
+
+            // write value of point
+            root.append('text')
+                .text(valueOfPoint)
+                .attr('x', interval * i + paddingLeft + horizontalPadding)
+                .attr('y', graphHeight - pointHeight + paddingTop)
+                .attr('font-size', 9)
+                .attr('text-anchor', 'middle')
+                .attr('alignment-baseline', 'ideographic')
+                .style('fill', color);
+
+            // write the last value of point
+            if (i === linePointData.length - 2) {
+                root.append('text')
+                    .text(valueOfNextPoint)
+                    .attr('x', interval * (i + 1) + paddingLeft + horizontalPadding)
+                    .attr('y', graphHeight - nextPointHeight + paddingTop)
+                    .attr('font-size', 9)
+                    .attr('text-anchor', 'middle')
+                    .attr('alignment-baseline', 'ideographic')
+                    .style('fill', color);
+
+
+                // write name of line
+                root.append('text')
+                    .text(lineName)
+                    .attr('x', interval * (i + 1) + paddingLeft + horizontalPadding + 15)
+                    .attr('y', graphHeight - nextPointHeight + paddingTop)
+                    .attr('text-anchor', 'start')
+                    .attr('alignment-baseline', 'central')
+                    .style('fill', color);
+            }
+        }
+    }
+
+</script>
+</body>
+</html>
