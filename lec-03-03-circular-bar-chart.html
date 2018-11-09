@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Circular Bar Chart </title>
+</head>
+<body>
+<style type="text/css">
+    #renderer {
+        width: 600px;
+        height: 600px;
+        background: #fff;
+        border: 1px solid #aaa;
+    }
+</style>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.13.0/d3.min.js"></script>
+<svg id='renderer'></svg>
+
+<script type="text/javascript">
+    var total_width = 600;
+    var total_height = 600;
+    var PI = Math.PI;
+
+    var root = d3.select('#renderer');
+
+    // 1. data
+    // circle information
+    var circle_center_x = total_width / 2;
+    var circle_center_y = total_height / 2;
+    var circle_radius = 100;
+
+    // bar chart height information
+    var data = [10, 12, 15, 13, 11, 9, 12, 5, 3, 8, 12, 8, 16];
+
+    // 2. draw
+
+    // draw bar chart
+    //      우선, 하나의 바가 차지할수 있는 넓이를 구합니다.
+    var circumference = circle_radius * 2 * PI;
+    var bar_area_width = circumference / data.length;
+
+
+    for (var i = 0; i < data.length; i++) {
+        // 이번 차례에 그릴 바의 '크기'를 받아 옵니다. ( * 10 은 그냥 어림 잡아 적은 값 )
+        var rect_size = data[i] * 10;
+
+        // 이번 차례에 그릴 바의 '각도'를 구합니다.
+        var theta = (2 * PI) * (i / data.length); // 0 ~ 2*PI
+        var degree = theta * (180 / PI);
+
+        // 이번 차례에 그릴 바의 위치를 구합니다.
+        var bar_x = circle_center_x + (Math.cos(theta) * (circle_radius * 0.85));
+        var bar_y = circle_center_y + (Math.sin(theta) * (circle_radius * 0.85));
+
+        console.log({ degree: degree, bar_x: bar_x, bar_y: bar_y });
+        root.append('rect')
+            .attr('x', 0)
+            .attr('y', 0)
+            .attr('width', rect_size)
+            .attr('height', bar_area_width)
+            .attr('transform', 'translate(' + bar_x + ',' + bar_y + ') rotate(' + (degree + 5) + ')')
+            .attr('fill', '#aaa')
+            .attr('opacity', 0.5)
+            .attr('stroke', '#555');
+    }
+
+    // draw circle
+    root.append('circle')
+        .attr('cx', circle_center_x)
+        .attr('cy', circle_center_y)
+        .attr('r', circle_radius)
+        .attr('fill', '#fafafa')
+        .attr('stroke', '#aaaaaa');
+
+</script>
+</body>
+</html>
