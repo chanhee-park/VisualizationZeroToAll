@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Parallel Coordinates</title>
+</head>
+
+<body>
+  <style type="text/css">
+    #renderer {
+      margin: 16px;
+      width: 910px;
+      height: 410px;
+      background: #fff;
+    }
+
+    #hoveredHuman {
+      margin: 20px;
+    }
+  </style>
+  <script type="text/javascript"
+          src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.13.0/d3.min.js"></script>
+  <script type="text/javascript"
+          src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.15/lodash.min.js"></script>
+  <script src="https://d3js.org/d3-selection-multi.v1.min.js"></script>
+
+  <svg id='renderer'></svg>
+  <div id='hoveredHuman'></div>
+
+  <script type="text/javascript">
+    const total_width = 900;
+    const total_height = 400;
+
+    const root = d3.select('#renderer');
+
+    // 1. data
+    const data = generateDataset(1000);
+    const features = _.keys(data[0]);
+    // get value list
+    const valueList = {};
+    for (let i = 0; i < features.length; i++) {
+      valueList[features[i]] = getValueList(data, features[i]);
+    }
+
+    const section_width = total_width / (features.length + 1);
+    const section_height = total_height * 0.8;
+
+    console.log({ data, features, valueList });
+
+    // 2. draw axis
+    root.append('line').attrs({
+      x1: section_width,
+      x2: total_width - section_width,
+      y1: section_height,
+      y2: section_height,
+      stroke: '#555'
+    });
+
+    for (let i = 0; i < features.length; i++) {
+      root.append('line').attrs({
+        x1: section_width * (i + 1),
+        x2: section_width * (i + 1),
+        y1: 0,
+        y2: section_height,
+        stroke: '#555'
+      });
+    }
+
+    // 3. draw lines 
+    const lineFunction = d3.line()
+      .x(function (d) { return d.x; })
+      .y(function (d) { return d.y; })
+      .curve(d3.curveLinear);
+
+    _.forEach(data, (d) => {
+      const lineData = [];
+      _.forEach(features, (f, xi) => {
+        const value = d[f];
+        const yi = valueList[f].indexOf(value);
+        const x = section_width * (xi + 1);
+        const y = (section_height / valueList[f].length) * (yi);
+        lineData.push({ x, y });
+      });
+      const color = getColor(d);
+      root.append("path").attrs({
+        'd': lineFunction(lineData),
+        'stroke': color,
+        'stroke-width': 1,
+        'fill': 'none',
+        'opacity': 0.3
+      }).on('mouseover', () => {
+        document.getElementById('hoveredHuman').innerText = JSON.stringify(d, null, 4);
+      });;
+    })
+
+    function getValueList(data, key) {
+      const valueList = [];
+      _.forEach(data, (e) => {
+        if (valueList.indexOf(e[key]) === -1) {
+          valueList.push(e[key]);
+        }
+      });
+      return _.sortedUniq(valueList.sort());
+    }
+
+    function getColor(human) {
+      let color = '#ccc';
+      const type = human['유형'];
+      if (!human.selected) return '#ccc';
+      if (type === '목격자') color = '#A3CCA2';
+      if (type === '범죄자') color = '#CCA3A2';
+      if (type === '신고자') color = '#A3A2CC';
+      return color;
+    }
+
+    function generateDataset(len) {
+      const dataset = [];
+      const locations = ['서울', '경기/인천', '충청', '전라', '경상', '강원', '제주', undefined];
+      const types = ['목격자', '범죄자', '신고자'];
+      const sexs = ['여자', '남자', undefined];
+      const jobs = ['무직', '회사원', '자영업', '공무원', '기타', undefined];
+
+      for (i = 0; i < len; i++) {
+        dataset.push({
+          '지역': getRandInstance(locations),
+          'x': getRandBetween(100, 200),
+          'y': getRandBetween(50, 100),
+          '유형': getRandInstance(types),
+          '나이': getRandBetween(15, 80),
+          '성별': getRandInstance(sexs),
+          '직업': getRandInstance(jobs),
+          'selected': getRandInstance([true, false, false, false, false]),
+        })
+      }
+      return dataset;
+    }
+
+    function getRandInstance(arr) {
+      const len = arr.length;
+      const randIdx = Math.floor(Math.random() * len);
+      return arr[randIdx]
+    }
+
+    function getRandBetween(min, max) {
+      if (Math.random() < 0.2) return undefined;
+      const interval = max - min;
+      return Math.floor(Math.random() * interval) + min;
+    }
+  </script>
+</body>
+
+</html>

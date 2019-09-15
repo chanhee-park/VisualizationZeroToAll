@@ -1,0 +1,98 @@
+<head>
+    <meta charset="UTF-8">
+    <title>How to get likes with cafestagram</title>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.13.0/d3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.core.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+<div id="graphDiv"></div>
+</body>
+<script>
+    d3.csv("./instagram_data.csv", function (insta_data) {
+        var keys = _.keys(insta_data[0]);
+        var dimensions = [];
+
+        _.forEach(keys, function (key) {
+            dimensions.push({
+                range: [0, 0],
+                label: key,
+                values: []
+            });
+        });
+
+        _.forEach(insta_data, function (each_img) {
+            var dim_idx = 0;
+            _.forEach(each_img, function (value, key) {
+                value = parseFloat(value);
+                dimensions[dim_idx]['values'].push(value);
+                // change min-max range
+                if (value > dimensions[dim_idx]['range'][1]) {
+                    dimensions[dim_idx]['range'][1] = value
+                } else if (value < dimensions[dim_idx]['range'][0]) {
+                    dimensions[dim_idx]['range'][0] = value
+                }
+                dim_idx += 1;
+            });
+        });
+
+        var trace = {
+            type: 'parcoords',
+            line: {
+                color: 'blue'
+            },
+            dimensions: dimensions
+        };
+
+        var data = [trace];
+
+        console.log(data);
+
+        Plotly.plot('graphDiv', data);
+    });
+
+    //    Plotly.d3.csv('./instagram_data2.csv', function (err, rows) {
+    //
+    //        function unpack(rows, key) {
+    //            return rows.map(function (row) {
+    //                return row[key];
+    //            });
+    //        }
+    //
+    //        var data = [{
+    //            type: 'parcoords',
+    //            pad: [80, 80, 80, 80],
+    //            line: {
+    //                color: 'blue'
+    //            },
+    //
+    //            dimensions: [{
+    //                range: [0, 10],
+    //                label: 'sepal_width',
+    //                values: unpack(rows, 'x1')
+    //            }, {
+    //                constraintrange: [5, 6],
+    //                range: [0, 10],
+    //                label: 'sepal_length',
+    //                values: unpack(rows, 'x2')
+    //            }, {
+    //                label: 'petal_width',
+    //                range: [0, 10],
+    //                values: unpack(rows, 'x3')
+    //            }, {
+    //                label: 'petal_width',
+    //                range: [0, 10],
+    //                values: unpack(rows, 'y')
+    //            }
+    //            ]
+    //        }];
+    //
+    //        var layout = {
+    //            width: 800
+    //        };
+    //
+    //        Plotly.plot('graphDiv', data, layout);
+    //
+    //    });
+</script>
+</html>
