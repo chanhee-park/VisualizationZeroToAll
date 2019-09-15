@@ -9,8 +9,8 @@
   <style type="text/css">
     #renderer {
       margin: 16px;
-      width: 910px;
-      height: 410px;
+      width: 940px;
+      height: 400px;
       background: #fff;
     }
 
@@ -28,8 +28,9 @@
   <div id='hoveredHuman'></div>
 
   <script type="text/javascript">
-    const total_width = 900;
+    const total_width = 940;
     const total_height = 400;
+    const padding = 20;
 
     const root = d3.select('#renderer');
 
@@ -49,21 +50,44 @@
 
     // 2. draw axis
     root.append('line').attrs({
-      x1: section_width,
-      x2: total_width - section_width,
-      y1: section_height,
-      y2: section_height,
+      x1: section_width + padding,
+      x2: total_width - section_width + padding,
+      y1: section_height + padding,
+      y2: section_height + padding,
       stroke: '#555'
     });
 
     for (let i = 0; i < features.length; i++) {
       root.append('line').attrs({
-        x1: section_width * (i + 1),
-        x2: section_width * (i + 1),
-        y1: 0,
-        y2: section_height,
-        stroke: '#555'
+        x1: section_width * (i + 1) + padding,
+        x2: section_width * (i + 1) + padding,
+        y1: 0 + padding,
+        y2: section_height + padding,
+        stroke: '#333'
       });
+      const fValueList = valueList[features[i]];
+      _.forEach(fValueList, (value, yi) => {
+        root.append('line').attrs({
+          x1: section_width * (i + 1) - 10 + padding,
+          x2: section_width * (i + 1) + 10,
+          y1: (section_height / fValueList.length) * yi + padding,
+          y2: (section_height / fValueList.length) * yi + padding,
+          stroke: '#777',
+          'stroke-width': 1
+        });
+        if (yi + 1 === fValueList.length) {
+          console.log(yi, fValueList);
+        }
+        if (fValueList.length < 10 || yi % Math.floor(fValueList.length / 5) === 0 || yi + 2 === fValueList.length) {
+          root.append('text').text(value).attrs({
+            x: section_width * (i + 1) + padding,
+            y: (section_height / fValueList.length) * yi + padding,
+            // https://bl.ocks.org/emmasaunders/0016ee0a2cab25a643ee9bd4855d3464
+            'text-anchor': 'start',
+            'alignment-baseline': 'central'
+          });
+        }
+      })
     }
 
     // 3. draw lines 
@@ -77,8 +101,8 @@
       _.forEach(features, (f, xi) => {
         const value = d[f];
         const yi = valueList[f].indexOf(value);
-        const x = section_width * (xi + 1);
-        const y = (section_height / valueList[f].length) * (yi);
+        const x = section_width * (xi + 1) + padding;
+        const y = (section_height / valueList[f].length) * (yi) + padding;
         lineData.push({ x, y });
       });
       const color = getColor(d);
@@ -129,7 +153,7 @@
           '나이': getRandBetween(15, 80),
           '성별': getRandInstance(sexs),
           '직업': getRandInstance(jobs),
-          'selected': getRandInstance([true, false, false, false, false]),
+          'selected': getRandInstance([true, false]),
         })
       }
       return dataset;
