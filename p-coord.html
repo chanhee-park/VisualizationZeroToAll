@@ -9,7 +9,7 @@
   <style type="text/css">
     #renderer {
       margin: 16px;
-      width: 940px;
+      width: 960px;
       height: 400px;
       background: #fff;
     }
@@ -28,94 +28,101 @@
   <div id='hoveredHuman'></div>
 
   <script type="text/javascript">
-    const total_width = 940;
-    const total_height = 400;
-    const padding = 20;
-
-    const root = d3.select('#renderer');
-
-    // 1. data
     const data = generateDataset(1000);
-    const features = _.keys(data[0]);
-    // get value list
-    const valueList = {};
-    for (let i = 0; i < features.length; i++) {
-      valueList[features[i]] = getValueList(data, features[i]);
-    }
+    drawPCoord(data, 'renderer');
 
-    const section_width = total_width / (features.length + 1);
-    const section_height = total_height * 0.8;
+    function drawPCoord(data, rendererId) {
+      // 0. renderer
+      const padding = 20;
+      const svg = d3.select(`#${rendererId}`)
+      const renderObj = document.getElementById(rendererId);
+      const w = renderObj.clientWidth - padding * 2;
+      const h = renderObj.clientHeight - padding * 2;
 
-    console.log({ data, features, valueList });
+      // 1. data
+      const features = _.keys(data[0]);
+      // get value list
+      const valueList = {};
+      _.forEach(features, f => valueList[f] = getValueList(data, f));
 
-    // 2. draw axis
-    root.append('line').attrs({
-      x1: section_width + padding,
-      x2: total_width - section_width + padding,
-      y1: section_height + padding,
-      y2: section_height + padding,
-      stroke: '#555'
-    });
+      // 2. set size of components
+      const section_width = w / features.length;
+      console.log({ data, features, valueList });
 
-    for (let i = 0; i < features.length; i++) {
-      root.append('line').attrs({
-        x1: section_width * (i + 1) + padding,
-        x2: section_width * (i + 1) + padding,
-        y1: 0 + padding,
-        y2: section_height + padding,
-        stroke: '#333'
+      // 3. draw axis 
+      // x축 
+      svg.append('line').attrs({
+        x1: padding,
+        x2: padding + w - section_width,
+        y1: padding + h,
+        y2: padding + h,
+        stroke: '#555'
       });
-      const fValueList = valueList[features[i]];
-      _.forEach(fValueList, (value, yi) => {
-        root.append('line').attrs({
-          x1: section_width * (i + 1) - 10 + padding,
-          x2: section_width * (i + 1) + 10,
-          y1: (section_height / fValueList.length) * yi + padding,
-          y2: (section_height / fValueList.length) * yi + padding,
-          stroke: '#777',
-          'stroke-width': 1
+
+      // y 축
+      _.forEach(features, (f, i) => {
+        svg.append('line').attrs({
+          x1: padding + section_width * i,
+          x2: padding + section_width * i,
+          y1: padding,
+          y2: padding + h,
+          stroke: '#555'
         });
-        if (yi + 1 === fValueList.length) {
-          console.log(yi, fValueList);
-        }
-        if (fValueList.length < 10 || yi % Math.floor(fValueList.length / 5) === 0 || yi + 2 === fValueList.length) {
-          root.append('text').text(value).attrs({
-            x: section_width * (i + 1) + padding,
-            y: (section_height / fValueList.length) * yi + padding,
-            // https://bl.ocks.org/emmasaunders/0016ee0a2cab25a643ee9bd4855d3464
-            'text-anchor': 'start',
-            'alignment-baseline': 'central'
+        const fValueList = valueList[f];
+        const section_height = h / fValueList.length;
+        _.forEach(fValueList, (value, yi) => {
+          svg.append('line').attrs({
+            x1: padding + section_width * i - 5,
+            x2: padding + section_width * i + 5,
+            y1: padding + section_height * yi,
+            y2: padding + section_height * yi,
+            stroke: '#999',
+            'stroke-width': 1
           });
-        }
+          if (yi + 1 === fValueList.length) {
+            console.log(yi, fValueList);
+          }
+          if (fValueList.length < 10 || yi % Math.floor(fValueList.length / 5) === 0 || yi + 2 === fValueList.length) {
+            svg.append('text').text(value).attrs({
+              x: padding + section_width * i,
+              y: padding + section_height * yi,
+              // https://bl.ocks.org/emmasaunders/0016ee0a2cab25a643ee9bd4855d3464
+              'text-anchor': 'start',
+              'alignment-baseline': 'central'
+            });
+          }
+        });
+      });
+
+      // 3. draw lines 
+      const lineFunction = d3.line()
+        .x(function (d) { return d.x; })
+        .y(function (d) { return d.y; })
+        .curve(d3.curveLinear); // curveLinear, curveBundle
+      // http://bl.ocks.org/valex/1c6f648d0b035c6b2f2269c56d64e696
+
+      _.forEach(data, (d) => {
+        const lineData = [];
+        _.forEach(features, (f, xi) => {
+          const value = d[f];
+          const section_height = (h / valueList[f].length);
+          const yi = valueList[f].indexOf(value);
+          const x = padding + section_width * xi;
+          const y = padding + section_height * yi;
+          lineData.push({ x, y });
+        });
+        const color = getColor(d);
+        svg.append("path").attrs({
+          'd': lineFunction(lineData),
+          'stroke': color,
+          'stroke-width': 1,
+          'fill': 'none',
+          'opacity': 0.3
+        }).on('mouseover', () => {
+          document.getElementById('hoveredHuman').innerText = JSON.stringify(d, null, 4);
+        });;
       })
     }
-
-    // 3. draw lines 
-    const lineFunction = d3.line()
-      .x(function (d) { return d.x; })
-      .y(function (d) { return d.y; })
-      .curve(d3.curveLinear);
-
-    _.forEach(data, (d) => {
-      const lineData = [];
-      _.forEach(features, (f, xi) => {
-        const value = d[f];
-        const yi = valueList[f].indexOf(value);
-        const x = section_width * (xi + 1) + padding;
-        const y = (section_height / valueList[f].length) * (yi) + padding;
-        lineData.push({ x, y });
-      });
-      const color = getColor(d);
-      root.append("path").attrs({
-        'd': lineFunction(lineData),
-        'stroke': color,
-        'stroke-width': 1,
-        'fill': 'none',
-        'opacity': 0.3
-      }).on('mouseover', () => {
-        document.getElementById('hoveredHuman').innerText = JSON.stringify(d, null, 4);
-      });;
-    })
 
     function getValueList(data, key) {
       const valueList = [];
@@ -127,6 +134,7 @@
       return _.sortedUniq(valueList.sort());
     }
 
+    /** 데이터 셋이 달라지면 코드도 변경해야함. 모듈화 필요 **/
     function getColor(human) {
       let color = '#ccc';
       const type = human['유형'];
@@ -137,6 +145,8 @@
       return color;
     }
 
+
+    /** CODE FOR GENERATING RNADOM DATASET 1 **/
     function generateDataset(len) {
       const dataset = [];
       const locations = ['서울', '경기/인천', '충청', '전라', '경상', '강원', '제주', undefined];
@@ -159,12 +169,14 @@
       return dataset;
     }
 
+    /** CODE FOR GENERATING RNADOM DATASET 2 **/
     function getRandInstance(arr) {
       const len = arr.length;
       const randIdx = Math.floor(Math.random() * len);
       return arr[randIdx]
     }
 
+    /** CODE FOR GENERATING RNADOM DATASET 3 **/
     function getRandBetween(min, max) {
       if (Math.random() < 0.2) return undefined;
       const interval = max - min;
